@@ -6,7 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 $error = '';
 if (isset($_POST['login'])) {
     $password = $_POST['password'];
-    if ($password === '5@8@12Yaa') {
+    if ($password === 'pengurusRT35') {
         $_SESSION['superuser'] = true;
         header("Location: admin_warga.php");
         exit;
