@@ -55,7 +55,7 @@ CREATE TABLE `jadwal_master` (
   `warga_id` INT NOT NULL,
   `hari` VARCHAR(20) NOT NULL,
   `pasaran` VARCHAR(20) NOT NULL,
-  `FOREIGN KEY (warga_id)` REFERENCES `warga` (`id`) ON DELETE CASCADE
+  FOREIGN KEY (`warga_id`) REFERENCES `warga` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `jadwal_master` (`id`, `warga_id`, `hari`, `pasaran`) VALUES
