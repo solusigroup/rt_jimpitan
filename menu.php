@@ -22,6 +22,11 @@ $is_admin = isset($_SESSION['superuser']) && $_SESSION['superuser'] === true;
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link px-3 rounded <?= ($current_page == 'jadwal.php') ? 'active bg-warning text-dark fw-bold' : 'text-white-50' ?>" href="jadwal.php">
+                        <i class="bi bi-grid-3x3-gap me-1"></i> Jadwal Lengkap
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link px-3 rounded <?= ($current_page == 'admin_warga.php') ? 'active bg-warning text-dark fw-bold' : 'text-white-50' ?>" href="admin_warga.php">
                         <i class="bi bi-people me-1"></i> Data Warga <?= !$is_admin ? '<i class="bi bi-lock-fill text-warning ms-1" style="font-size: 0.8rem;"></i>' : '' ?>
                     </a>
