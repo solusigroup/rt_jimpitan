@@ -1,4 +1,7 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 include 'koneksi.php';
 include 'fungsi_pasaran.php';
 
@@ -15,6 +18,10 @@ $query = "SELECT w.nama, w.no_wa
           WHERE j.hari = '$hari' AND j.pasaran = '$pasaran' AND w.status_aktif = 1";
 
 $result = mysqli_query($koneksi, $query);
+
+if (!$result) {
+    die("Gagal menjalankan query database: " . mysqli_error($koneksi));
+}
 
 if (mysqli_num_rows($result) > 0) {
     while ($warga = mysqli_fetch_assoc($result)) {
