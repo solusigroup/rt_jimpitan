@@ -5,6 +5,11 @@ $password = "root";          // Sesuaikan dengan password MariaDB Bapak (kosongk
 $database = "rt_jimpitan";
 $port     = 3306;        // Port default MariaDB (bisa diganti misal 3307 jika menggunakan DBngin)
 
+// Muat konfigurasi kustom (misal untuk server production) jika ada
+if (file_exists(__DIR__ . '/koneksi_custom.php')) {
+    include __DIR__ . '/koneksi_custom.php';
+}
+
 $koneksi = mysqli_connect($host, $username, $password, $database, $port);
 
 if (!$koneksi) {

@@ -1,0 +1,8 @@
+# Ignore custom database config
+koneksi_custom.php
+
+# Ignore Node.js dependencies and session logs
+node_modules/
+.wwebjs_auth/
+.wwebjs_cache/
+*.log
