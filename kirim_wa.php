@@ -31,67 +31,89 @@ if (mysqli_num_rows($result) > 0) {
         // Template Pesan Pengingat
         $pesan = "Assalamualaikum Wr. Wb.\n\nMengingatkan kepada Bapak *$nama_warga*,\nBerdasarkan jadwal RT 35, malam ini (*$hari $pasaran*) adalah jadwal Anda untuk bertugas mengambil jimpitan warga.\n\nMohon kerjasamanya demi keamanan lingkungan kita.\nTerima kasih.\n\n— *Pengurus RT*";
         
-        // --- PROSES KIRIM WHATSAPP VIA GATEWAY LOKAL NODE.JS ---
-        $curl = curl_init();
-        curl_setopt_array($curl, array(
-          CURLOPT_URL => 'http://127.0.0.1:3000/send',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 10,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => json_encode(array(
-            'to' => $nomor_wa,
-            'message' => $pesan
-          )),
-          CURLOPT_HTTPHEADER => array(
-            'Content-Type: application/json'
-          ),
-        ));
-        
-        $response = curl_exec($curl);
-        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        $curl_error = curl_error($curl);
-        curl_close($curl);
-        
-        /* 
-        // --- BACKUP: WHATSAPP VIA GATEWAY BERBAYAR (FONNTE) ---
-        $token_fonnte = "ISI_TOKEN_FONNTE_ANDA_DISINI";
-        $curl_fonnte = curl_init();
-        curl_setopt_array($curl_fonnte, array(
-          CURLOPT_URL => 'https://api.fonnte.com/send',
-          CURLOPT_RETURNTRANSFER => true,
-          CURLOPT_ENCODING => '',
-          CURLOPT_MAXREDIRS => 10,
-          CURLOPT_TIMEOUT => 0,
-          CURLOPT_FOLLOWLOCATION => true,
-          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-          CURLOPT_CUSTOMREQUEST => 'POST',
-          CURLOPT_POSTFIELDS => array(
-            'target' => $nomor_wa,
-            'message' => $pesan,
-            'countryCode' => '62',
-          ),
-          CURLOPT_HTTPHEADER => array(
-            "Authorization: $token_fonnte"
-          ),
-        ));
-        $response_fonnte = curl_exec($curl_fonnte);
-        curl_close($curl_fonnte);
-        */
+        // Cek apakah Token Fonnte terkonfigurasi di koneksi_custom.php
+        if (isset($token_fonnte) && !empty($token_fonnte)) {
+            // --- PROSES KIRIM WHATSAPP VIA GATEWAY BERBAYAR (FONNTE) ---
+            $gateway_name = "Fonnte";
+            $curl_fonnte = curl_init();
+            curl_setopt_array($curl_fonnte, array(
+              CURLOPT_URL => 'https://api.fonnte.com/send',
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 10,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS => array(
+                'target' => $nomor_wa,
+                'message' => $pesan,
+                'countryCode' => '62',
+              ),
+              CURLOPT_HTTPHEADER => array(
+                "Authorization: $token_fonnte"
+              ),
+            ));
+            $response = curl_exec($curl_fonnte);
+            $http_code = curl_getinfo($curl_fonnte, CURLINFO_HTTP_CODE);
+            $curl_error = curl_error($curl_fonnte);
+            curl_close($curl_fonnte);
+        } else {
+            // --- PROSES KIRIM WHATSAPP VIA GATEWAY LOKAL NODE.JS ---
+            $gateway_name = "Gateway Lokal (Node.js)";
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+              CURLOPT_URL => 'http://127.0.0.1:3000/send',
+              CURLOPT_RETURNTRANSFER => true,
+              CURLOPT_ENCODING => '',
+              CURLOPT_MAXREDIRS => 10,
+              CURLOPT_TIMEOUT => 10,
+              CURLOPT_FOLLOWLOCATION => true,
+              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+              CURLOPT_CUSTOMREQUEST => 'POST',
+              CURLOPT_POSTFIELDS => json_encode(array(
+                'to' => $nomor_wa,
+                'message' => $pesan
+              )),
+              CURLOPT_HTTPHEADER => array(
+                'Content-Type: application/json'
+              ),
+            ));
+            
+            $response = curl_exec($curl);
+            $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+            $curl_error = curl_error($curl);
+            curl_close($curl);
+        }
         
         // Log status di server
         if ($response === false) {
-            echo "Gagal mengirim ke $nama_warga ($nomor_wa): Koneksi ke Gateway gagal. Error: $curl_error<br>";
+            echo "Gagal mengirim ke $nama_warga ($nomor_wa): Koneksi ke $gateway_name gagal. Error: $curl_error<br>";
         } else {
             $res_data = json_decode($response, true);
-            if ($http_code === 200 && isset($res_data['status']) && $res_data['status'] === 'success') {
-                echo "Peringatan terkirim ke $nama_warga ($nomor_wa)<br>";
+            $is_success = false;
+            $err_msg = 'Gagal tanpa detail pesan.';
+            
+            if ($gateway_name === "Fonnte") {
+                // Fonnte menggunakan status boolean true/false
+                if ($http_code === 200 && isset($res_data['status']) && $res_data['status'] === true) {
+                    $is_success = true;
+                } else {
+                    $err_msg = isset($res_data['reason']) ? $res_data['reason'] : (isset($res_data['detail']) ? $res_data['detail'] : 'Response Fonnte tidak valid.');
+                }
             } else {
-                $err_msg = isset($res_data['message']) ? $res_data['message'] : 'Gagal tanpa detail pesan.';
-                echo "Gagal mengirim ke $nama_warga ($nomor_wa): Gateway merespon dengan error (HTTP $http_code): $err_msg<br>";
+                // Gateway Lokal menggunakan status string 'success'
+                if ($http_code === 200 && isset($res_data['status']) && $res_data['status'] === 'success') {
+                    $is_success = true;
+                } else {
+                    $err_msg = isset($res_data['message']) ? $res_data['message'] : 'Response Gateway Lokal tidak valid.';
+                }
+            }
+            
+            if ($is_success) {
+                echo "Peringatan terkirim ke $nama_warga ($nomor_wa) [via $gateway_name]<br>";
+            } else {
+                echo "Gagal mengirim ke $nama_warga ($nomor_wa): $gateway_name merespon dengan error (HTTP $http_code): $err_msg<br>";
             }
         }
     }
