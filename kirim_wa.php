@@ -45,6 +45,8 @@ if (mysqli_num_rows($result) > 0) {
         ));
         
         $response = curl_exec($curl);
+        $http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($curl);
         curl_close($curl);
         
         /* 
@@ -73,8 +75,18 @@ if (mysqli_num_rows($result) > 0) {
         curl_close($curl_fonnte);
         */
         
-        // Log sederhana di server
-        echo "Peringatan terkirim ke $nama_warga ($nomor_wa)<br>";
+        // Log status di server
+        if ($response === false) {
+            echo "Gagal mengirim ke $nama_warga ($nomor_wa): Koneksi ke Gateway gagal. Error: $curl_error<br>";
+        } else {
+            $res_data = json_decode($response, true);
+            if ($http_code === 200 && isset($res_data['status']) && $res_data['status'] === 'success') {
+                echo "Peringatan terkirim ke $nama_warga ($nomor_wa)<br>";
+            } else {
+                $err_msg = isset($res_data['message']) ? $res_data['message'] : 'Gagal tanpa detail pesan.';
+                echo "Gagal mengirim ke $nama_warga ($nomor_wa): Gateway merespon dengan error (HTTP $http_code): $err_msg<br>";
+            }
+        }
     }
 } else {
     echo "Tidak ada jadwal jimpitan untuk hari ini ($hari $pasaran).";
