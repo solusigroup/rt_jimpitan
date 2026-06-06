@@ -4,6 +4,8 @@ include 'fungsi_pasaran.php';
 
 // Ambil tanggal hari ini (Format: YYYY-MM-DD)
 $hari_ini = date('Y-m-d');
+initJadwalHarian($koneksi, $hari_ini);
+
 $weton    = getHariPasaran($hari_ini);
 
 $hari_jawa    = $weton['hari'];

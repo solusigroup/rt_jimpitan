@@ -2,6 +2,10 @@
 include 'koneksi.php';
 include 'fungsi_pasaran.php';
 
+// Ambil tanggal hari ini (Format: YYYY-MM-DD)
+$hari_ini = date('Y-m-d');
+initJadwalHarian($koneksi, $hari_ini);
+
 // Ambil statistik dari database
 $total_tugas = 0;
 $selesai = 0;
