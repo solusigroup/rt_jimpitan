@@ -9,6 +9,7 @@ CREATE TABLE `warga` (
   `nama` VARCHAR(100) NOT NULL,
   `no_rumah` VARCHAR(50) NOT NULL,
   `no_wa` VARCHAR(50) DEFAULT '',
+  `foto` VARCHAR(255) DEFAULT NULL,
   `status_aktif` TINYINT(1) DEFAULT 1
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

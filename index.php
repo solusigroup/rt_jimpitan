@@ -124,7 +124,7 @@ $pasaran_jawa = $weton['pasaran'];
             <div class="row justify-content-center g-4">
                 <?php
                 // Query untuk mengambil warga berdasarkan hari pasaran saat ini, join dengan status harian
-                $query = "SELECT w.id as warga_id, w.nama, w.no_rumah, w.no_wa, jh.status 
+                $query = "SELECT w.id as warga_id, w.nama, w.no_rumah, w.no_wa, w.foto, jh.status 
                           FROM jadwal_master j
                           JOIN warga w ON j.warga_id = w.id
                           LEFT JOIN jimpitan_harian jh ON w.id = jh.warga_id AND jh.tanggal = '$hari_ini'
@@ -169,6 +169,16 @@ $pasaran_jawa = $weton['pasaran'];
                         } else {
                             $initials = strtoupper(substr($nama, 0, 2));
                         }
+
+                        // Avatar Section
+                        $avatar_html = "";
+                        if (!empty($row['foto']) && file_exists('uploads/' . $row['foto'])) {
+                            $avatar_html = "<img src='uploads/{$row['foto']}' class='avatar-container rounded-circle shadow-sm object-fit-cover border' style='width: 80px; height: 80px; min-width: 80px;' alt='{$nama}'>";
+                        } else {
+                            $avatar_html = "<div class='avatar-container bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm' style='width: 80px; height: 80px; min-width: 80px; font-size: 1.8rem; letter-spacing: 0.5px;'>
+                                                {$initials}
+                                            </div>";
+                        }
                         
                         echo "
                         <div class='col-md-10 col-lg-8'>
@@ -176,9 +186,7 @@ $pasaran_jawa = $weton['pasaran'];
                                 <div class='card-body p-2'>
                                     <div class='d-flex flex-column flex-sm-row align-items-center align-items-sm-start text-center text-sm-start gap-4 py-2'>
                                         <!-- Avatar Section -->
-                                        <div class='avatar-container bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm' style='width: 80px; height: 80px; min-width: 80px; font-size: 1.8rem; letter-spacing: 0.5px;'>
-                                            {$initials}
-                                        </div>
+                                        {$avatar_html}
                                         
                                         <!-- Info Section -->
                                         <div class='flex-grow-1 w-100'>

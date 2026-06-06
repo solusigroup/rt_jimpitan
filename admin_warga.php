@@ -9,6 +9,7 @@ $id_edit = '';
 $nama_edit = '';
 $no_rumah_edit = '';
 $no_wa_edit = '';
+$foto_edit = '';
 
 // Ambil data untuk mode edit jika parameter 'edit' ada
 if (isset($_GET['edit'])) {
@@ -19,6 +20,7 @@ if (isset($_GET['edit'])) {
         $nama_edit = $row_edit['nama'];
         $no_rumah_edit = $row_edit['no_rumah'];
         $no_wa_edit = $row_edit['no_wa'];
+        $foto_edit = $row_edit['foto'];
     }
 }
 
@@ -28,7 +30,30 @@ if (isset($_POST['tambah'])) {
     $no_rumah = mysqli_real_escape_string($koneksi, $_POST['no_rumah']);
     $no_wa = mysqli_real_escape_string($koneksi, $_POST['no_wa']);
     
-    mysqli_query($koneksi, "INSERT INTO warga (nama, no_rumah, no_wa) VALUES ('$nama', '$no_rumah', '$no_wa')");
+    // Proses Upload Foto
+    $foto_name = '';
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp = $_FILES['foto']['tmp_name'];
+        $file_original_name = $_FILES['foto']['name'];
+        $file_size = $_FILES['foto']['size'];
+        $file_ext = strtolower(pathinfo($file_original_name, PATHINFO_EXTENSION));
+        
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (in_array($file_ext, $allowed_extensions)) {
+            if ($file_size <= 2 * 1024 * 1024) { // Batas 2MB
+                if (!is_dir('uploads')) {
+                    mkdir('uploads', 0777, true);
+                }
+                $new_file_name = 'warga_' . time() . '_' . rand(1000, 9999) . '.' . $file_ext;
+                $dest_path = 'uploads/' . $new_file_name;
+                if (move_uploaded_file($file_tmp, $dest_path)) {
+                    $foto_name = $new_file_name;
+                }
+            }
+        }
+    }
+    
+    mysqli_query($koneksi, "INSERT INTO warga (nama, no_rumah, no_wa, foto) VALUES ('$nama', '$no_rumah', '$no_wa', '$foto_name')");
     header("Location: admin_warga.php");
     exit;
 }
@@ -40,7 +65,46 @@ if (isset($_POST['update'])) {
     $no_rumah = mysqli_real_escape_string($koneksi, $_POST['no_rumah']);
     $no_wa = mysqli_real_escape_string($koneksi, $_POST['no_wa']);
     
-    mysqli_query($koneksi, "UPDATE warga SET nama='$nama', no_rumah='$no_rumah', no_wa='$no_wa' WHERE id=$id");
+    // Ambil info foto warga saat ini
+    $res_current = mysqli_query($koneksi, "SELECT foto FROM warga WHERE id = $id");
+    $row_current = mysqli_fetch_assoc($res_current);
+    $foto_name = $row_current['foto'];
+    
+    // Jika admin mencentang hapus foto aktif
+    if (isset($_POST['hapus_foto_aktif']) && $_POST['hapus_foto_aktif'] == '1') {
+        if (!empty($foto_name) && file_exists('uploads/' . $foto_name)) {
+            unlink('uploads/' . $foto_name);
+        }
+        $foto_name = '';
+    }
+    
+    // Proses Upload Foto Baru (jika ada)
+    if (isset($_FILES['foto']) && $_FILES['foto']['error'] === UPLOAD_ERR_OK) {
+        $file_tmp = $_FILES['foto']['tmp_name'];
+        $file_original_name = $_FILES['foto']['name'];
+        $file_size = $_FILES['foto']['size'];
+        $file_ext = strtolower(pathinfo($file_original_name, PATHINFO_EXTENSION));
+        
+        $allowed_extensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+        if (in_array($file_ext, $allowed_extensions)) {
+            if ($file_size <= 2 * 1024 * 1024) { // Batas 2MB
+                if (!is_dir('uploads')) {
+                    mkdir('uploads', 0777, true);
+                }
+                $new_file_name = 'warga_' . time() . '_' . rand(1000, 9999) . '.' . $file_ext;
+                $dest_path = 'uploads/' . $new_file_name;
+                if (move_uploaded_file($file_tmp, $dest_path)) {
+                    // Hapus foto lama dari disk jika ada
+                    if (!empty($foto_name) && file_exists('uploads/' . $foto_name)) {
+                        unlink('uploads/' . $foto_name);
+                    }
+                    $foto_name = $new_file_name;
+                }
+            }
+        }
+    }
+    
+    mysqli_query($koneksi, "UPDATE warga SET nama='$nama', no_rumah='$no_rumah', no_wa='$no_wa', foto='$foto_name' WHERE id=$id");
     header("Location: admin_warga.php");
     exit;
 }
@@ -48,6 +112,16 @@ if (isset($_POST['update'])) {
 // Proses Hapus Data (Delete)
 if (isset($_GET['hapus'])) {
     $id = intval($_GET['hapus']);
+    
+    // Ambil info foto warga untuk dihapus dari disk
+    $res_current = mysqli_query($koneksi, "SELECT foto FROM warga WHERE id = $id");
+    if ($row_current = mysqli_fetch_assoc($res_current)) {
+        $foto_name = $row_current['foto'];
+        if (!empty($foto_name) && file_exists('uploads/' . $foto_name)) {
+            unlink('uploads/' . $foto_name);
+        }
+    }
+    
     mysqli_query($koneksi, "DELETE FROM warga WHERE id=$id");
     header("Location: admin_warga.php");
     exit;
@@ -76,7 +150,7 @@ if (isset($_GET['hapus'])) {
                     <?= $edit_mode ? 'Edit Data Warga' : 'Tambah Warga Baru' ?>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <?php if ($edit_mode): ?>
                             <input type="hidden" name="id" value="<?= $id_edit ?>">
                         <?php endif; ?>
@@ -92,6 +166,21 @@ if (isset($_GET['hapus'])) {
                         <div class="mb-3">
                             <label class="form-label fw-semibold text-secondary small">No. WhatsApp (Gunakan Kode Negara: 6281xxx)</label>
                             <input type="text" name="no_wa" class="form-control" placeholder="Contoh: 62812345678" value="<?= htmlspecialchars($no_wa_edit) ?>">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Foto Warga (Maksimal 2MB)</label>
+                            <?php if ($edit_mode && !empty($foto_edit) && file_exists('uploads/' . $foto_edit)): ?>
+                                <div class="mb-2 d-flex align-items-center gap-3 bg-light p-2 rounded border">
+                                    <img src="uploads/<?= $foto_edit ?>" class="img-thumbnail rounded-circle object-fit-cover" style="width: 60px; height: 60px;" alt="Foto Warga">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="hapus_foto_aktif" value="1" id="hapusFoto">
+                                        <label class="form-check-label small text-danger fw-semibold" for="hapusFoto">
+                                            Hapus foto saat ini
+                                        </label>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
+                            <input type="file" name="foto" class="form-control" accept="image/*">
                         </div>
                         
                         <?php if ($edit_mode): ?>
@@ -135,7 +224,25 @@ if (isset($_GET['hapus'])) {
                                 if (mysqli_num_rows($res) > 0):
                                     while($row = mysqli_fetch_assoc($res)): ?>
                                     <tr>
-                                        <td class="px-4 fw-semibold text-dark"><?= htmlspecialchars($row['nama']) ?></td>
+                                        <td class="px-4 fw-semibold text-dark">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <?php if (!empty($row['foto']) && file_exists('uploads/' . $row['foto'])): ?>
+                                                    <img src="uploads/<?= $row['foto'] ?>" class="rounded-circle object-fit-cover border shadow-sm" style="width: 40px; height: 40px; min-width: 40px;" alt="Foto">
+                                                <?php else: ?>
+                                                    <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary border fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; min-width: 40px; font-size: 0.85rem; height: 40px; width: 40px;">
+                                                        <?php
+                                                        $name_parts = explode(' ', $row['nama']);
+                                                        if (count($name_parts) >= 2) {
+                                                            echo strtoupper(substr($name_parts[0], 0, 1) . substr($name_parts[1], 0, 1));
+                                                        } else {
+                                                            echo strtoupper(substr($row['nama'], 0, 2));
+                                                        }
+                                                        ?>
+                                                    </div>
+                                                <?php endif; ?>
+                                                <span><?= htmlspecialchars($row['nama']) ?></span>
+                                            </div>
+                                        </td>
                                         <td><span class="badge bg-light text-dark border px-2.5 py-1.5"><?= htmlspecialchars($row['no_rumah']) ?></span></td>
                                         <td>
                                             <?php if (!empty($row['no_wa'])): ?>
