@@ -66,3 +66,21 @@ $is_admin = isset($_SESSION['superuser']) && $_SESSION['superuser'] === true;
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <!-- Bootstrap Bundle JS (for responsive toggler on mobile) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- PWA Meta Tags & Manifest -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="uploads/icon-192.png">
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('PWA Service Worker registered successfully.', reg.scope))
+            .catch(err => console.log('PWA Service Worker registration failed.', err));
+    });
+}
+</script>

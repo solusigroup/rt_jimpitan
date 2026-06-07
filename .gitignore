@@ -6,4 +6,6 @@ node_modules/
 .wwebjs_auth/
 .wwebjs_cache/
 *.log
-uploads/
+uploads/*
+!uploads/icon-192.png
+!uploads/icon-512.png
