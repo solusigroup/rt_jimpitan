@@ -22,6 +22,7 @@ if (!$data) {
 $warga_id = isset($data['warga_id']) ? intval($data['warga_id']) : 0;
 $tanggal  = isset($data['tanggal']) ? mysqli_real_escape_string($koneksi, $data['tanggal']) : '';
 $status   = isset($data['status']) ? mysqli_real_escape_string($koneksi, $data['status']) : '';
+$nominal  = isset($data['nominal']) ? intval($data['nominal']) : 0;
 
 if ($warga_id <= 0 || empty($tanggal) || empty($status)) {
     http_response_code(400);
@@ -36,10 +37,15 @@ if (!in_array($status, ['Belum Dikerjakan', 'Sudah Dikerjakan'])) {
     exit;
 }
 
-// Insert atau update status jimpitan harian
-$query = "INSERT INTO jimpitan_harian (tanggal, warga_id, status)
-          VALUES ('$tanggal', $warga_id, '$status')
-          ON DUPLICATE KEY UPDATE status = '$status'";
+// Jika status diubah menjadi Belum Dikerjakan, set nominal kembali ke 0
+if ($status === 'Belum Dikerjakan') {
+    $nominal = 0;
+}
+
+// Insert atau update status jimpitan harian beserta nominalnya
+$query = "INSERT INTO jimpitan_harian (tanggal, warga_id, status, nominal)
+          VALUES ('$tanggal', $warga_id, '$status', $nominal)
+          ON DUPLICATE KEY UPDATE status = '$status', nominal = $nominal";
 
 if (mysqli_query($koneksi, $query)) {
     echo json_encode([

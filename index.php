@@ -126,7 +126,7 @@ $pasaran_jawa = $weton['pasaran'];
             <div class="row justify-content-center g-4">
                 <?php
                 // Query untuk mengambil warga berdasarkan hari pasaran saat ini, join dengan status harian
-                $query = "SELECT w.id as warga_id, w.nama, w.no_rumah, w.no_wa, w.foto, jh.status 
+                $query = "SELECT w.id as warga_id, w.nama, w.no_rumah, w.no_wa, w.foto, jh.status, COALESCE(jh.nominal, 0) as nominal 
                           FROM jadwal_master j
                           JOIN warga w ON j.warga_id = w.id
                           LEFT JOIN jimpitan_harian jh ON w.id = jh.warga_id AND jh.tanggal = '$hari_ini'
@@ -148,7 +148,8 @@ $pasaran_jawa = $weton['pasaran'];
                         // Status badge markup
                         $status_badge = "";
                         if ($status == 'Sudah Dikerjakan') {
-                            $status_badge = "<span class='badge bg-success text-white px-3 py-2 fw-semibold rounded-pill d-inline-flex align-items-center gap-1.5'><i class='bi bi-check-all fs-6'></i> Sudah Selesai</span>";
+                            $nominal_formatted = number_format($row['nominal'], 0, ',', '.');
+                            $status_badge = "<span class='badge bg-success text-white px-3 py-2 fw-semibold rounded-pill d-inline-flex align-items-center gap-1.5'><i class='bi bi-check-all fs-6'></i> Sudah Selesai (Rp {$nominal_formatted})</span>";
                         } else {
                             $status_badge = "<span class='badge bg-warning text-dark px-3 py-2 fw-semibold rounded-pill d-inline-flex align-items-center gap-1.5 pulse-warning'><i class='bi bi-clock-history fs-6'></i> Belum Selesai</span>";
                         }
@@ -222,7 +223,7 @@ $pasaran_jawa = $weton['pasaran'];
                                             <button type='button' id='btn-belum-{$warga_id}' class='btn btn-sm px-2 px-sm-4 py-2 fw-bold text-nowrap d-flex align-items-center gap-1 gap-sm-1.5 transition-all button-belum {$belum_active}' onclick='updateStatus({$warga_id}, \"Belum Dikerjakan\", \"{$nama}\")'>
                                                 <i class='bi bi-clock-history'></i> Belum Selesai
                                             </button>
-                                            <button type='button' id='btn-sudah-{$warga_id}' class='btn btn-sm px-2 px-sm-4 py-2 fw-bold text-nowrap d-flex align-items-center gap-1 gap-sm-1.5 transition-all button-sudah {$sudah_active}' onclick='updateStatus({$warga_id}, \"Sudah Dikerjakan\", \"{$nama}\")'>
+                                            <button type='button' id='btn-sudah-{$warga_id}' class='btn btn-sm px-2 px-sm-4 py-2 fw-bold text-nowrap d-flex align-items-center gap-1 gap-sm-1.5 transition-all button-sudah {$sudah_active}' onclick='openNominalModal({$warga_id}, \"{$nama}\")'>
                                                 <i class='bi bi-check-circle-fill'></i> Sudah Selesai
                                             </button>
                                         </div>
@@ -258,8 +259,63 @@ $pasaran_jawa = $weton['pasaran'];
     </div>
 </div>
 
+<!-- Modal Input Nominal Jimpitan -->
+<div class="modal fade" id="nominalModal" tabindex="-1" aria-labelledby="nominalModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header bg-success text-white py-3 border-0 rounded-top-4">
+                <h5 class="modal-title fw-bold" id="nominalModalLabel"><i class="bi bi-cash-coin me-1"></i> Input Uang Jimpitan</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-3">
+                    <label class="small text-secondary fw-semibold">Nama Petugas Ronda</label>
+                    <h5 class="fw-bold text-dark mb-0" id="modalWargaNama">-</h5>
+                </div>
+                <div class="mb-3">
+                    <label for="modalNominalInput" class="form-label small text-secondary fw-semibold">Jumlah Jimpitan (Rp)</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-light fw-bold text-secondary">Rp</span>
+                        <input type="number" id="modalNominalInput" class="form-control fw-bold text-success" value="1000" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer p-3 border-0 bg-light rounded-bottom-4 d-flex">
+                <button type="button" class="btn btn-outline-secondary w-50 fw-semibold rounded-pill py-2" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-success w-50 fw-bold rounded-pill py-2" id="btnConfirmNominal">Simpan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function updateStatus(wargaId, newStatus, namaWarga) {
+let currentWargaId = 0;
+let currentWargaNama = '';
+let bootstrapModalInstance = null;
+
+function openNominalModal(wargaId, namaWarga) {
+    currentWargaId = wargaId;
+    currentWargaNama = namaWarga;
+    
+    document.getElementById('modalWargaNama').textContent = namaWarga;
+    document.getElementById('modalNominalInput').value = '1000';
+    
+    const modalEl = document.getElementById('nominalModal');
+    if (!bootstrapModalInstance) {
+        bootstrapModalInstance = new bootstrap.Modal(modalEl);
+    }
+    bootstrapModalInstance.show();
+}
+
+document.getElementById('btnConfirmNominal').addEventListener('click', function() {
+    const nominal = parseInt(document.getElementById('modalNominalInput').value) || 0;
+    if (bootstrapModalInstance) {
+        bootstrapModalInstance.hide();
+    }
+    updateStatus(currentWargaId, 'Sudah Dikerjakan', currentWargaNama, nominal);
+});
+
+function updateStatus(wargaId, newStatus, namaWarga, nominal = 0) {
     const tanggal = '<?= $hari_ini; ?>';
     
     // Nonaktifkan tombol saat loading untuk menghindari klik ganda
@@ -277,7 +333,8 @@ function updateStatus(wargaId, newStatus, namaWarga) {
         body: JSON.stringify({
             warga_id: wargaId,
             tanggal: tanggal,
-            status: newStatus
+            status: newStatus,
+            nominal: nominal
         })
     })
     .then(response => {
@@ -293,11 +350,14 @@ function updateStatus(wargaId, newStatus, namaWarga) {
                 btnBelum.classList.remove('active');
                 btnSudah.classList.add('active');
                 
+                // Format currency
+                const formattedNominal = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(nominal).replace('IDR', 'Rp');
+                
                 // Update badge
                 const badgeContainer = document.getElementById('badge-container-' + wargaId);
-                badgeContainer.innerHTML = `<span class="badge bg-success text-white px-3 py-2 fw-semibold rounded-pill d-inline-flex align-items-center gap-1.5"><i class="bi bi-check-all fs-6"></i> Sudah Selesai</span>`;
+                badgeContainer.innerHTML = `<span class="badge bg-success text-white px-3 py-2 fw-semibold rounded-pill d-inline-flex align-items-center gap-1.5"><i class="bi bi-check-all fs-6"></i> Sudah Selesai (${formattedNominal})</span>`;
                 
-                showToast('Status piket ' + namaWarga + ' diperbarui menjadi Sudah Selesai!', 'success');
+                showToast('Status piket ' + namaWarga + ' diperbarui menjadi Sudah Selesai (' + formattedNominal + ')!', 'success');
             } else {
                 btnSudah.classList.remove('active');
                 btnBelum.classList.add('active');
