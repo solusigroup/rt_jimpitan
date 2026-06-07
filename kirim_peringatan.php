@@ -28,13 +28,15 @@ $result = mysqli_query($koneksi, $query);
 <head>
     <title>Proses Pengiriman...</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- Bootstrap Icons Support -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 
 <body class="bg-light">
     <div class="container mt-5" style="max-width: 600px;">
         <div class="card shadow border-0">
-            <div class="card-header bg-success text-white text-center">
-                <h5 class="mb-0 fw-bold">Antrean Pesan WhatsApp</h5>
+            <div class="card-header bg-success text-white text-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="bi bi-whatsapp me-2"></i>Antrean Pesan WhatsApp</h5>
             </div>
             <div class="card-body p-4">
 
@@ -59,18 +61,15 @@ $result = mysqli_query($koneksi, $query);
                         $url_wa = "https://wa.me/" . $nomor_wa . "?text=" . urlencode($pesan);
                         ?>
 
-                        <div
-                            class="d-flex justify-content-between align-items-center p-3 mb-2 border rounded bg-white shadow-sm">
-                            <div>
-                                <span class="text-secondary small">Warga #
-                                    <?= $no++; ?>
-                                </span>
-                                <h6 class="mb-0 fw-bold text-dark">
+                        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-stretch align-items-sm-center p-3 mb-3 border rounded-3 bg-white shadow-sm gap-3">
+                            <div class="text-center text-sm-start">
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary mb-1">Warga #<?= $no++; ?></span>
+                                <h5 class="mb-0 fw-bold text-dark">
                                     <?= $nama_warga; ?>
-                                </h6>
+                                </h5>
                             </div>
-                            <a href="<?= $url_wa; ?>" target="_blank" class="btn btn-success btn-sm px-3 fw-bold">
-                                Kirim ke WA →
+                            <a href="<?= $url_wa; ?>" target="_blank" class="btn btn-success btn-lg py-2.5 px-4 fw-bold shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                                <i class="bi bi-whatsapp fs-5"></i> Kirim ke WA →
                             </a>
                         </div>
 
