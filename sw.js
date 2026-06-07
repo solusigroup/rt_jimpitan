@@ -15,7 +15,13 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
       console.log('[Service Worker] Caching static assets');
-      return cache.addAll(ASSETS_TO_CACHE);
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(asset => {
+          return cache.add(asset).catch(err => {
+            console.error(`[Service Worker] Gagal mencache: ${asset}`, err);
+          });
+        })
+      );
     })
   );
   self.skipWaiting();
