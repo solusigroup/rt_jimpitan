@@ -5,14 +5,19 @@ include 'koneksi.php';
 include 'fungsi_pasaran.php';
 
 $hari_ini = date('Y-m-d');
+initJadwalHarian($koneksi, $hari_ini);
+
 $weton = getHariPasaran($hari_ini);
 $hari = $weton['hari'];
 $pasaran = $weton['pasaran'];
 
 // Tarik data petugas hari ini untuk ditampilkan di dashboard admin
-$query = "SELECT w.nama, w.no_wa, w.no_rumah 
+$query = "SELECT w.id, w.nama, w.no_wa, w.no_rumah, 
+                 CASE WHEN jh.status = 'Sudah Dikerjakan' THEN 'Sudah Selesai' ELSE 'Belum Selesai' END AS status_tugas,
+                 COALESCE(jh.nominal, 0) AS nominal_jimpitan
           FROM jadwal_master j
           JOIN warga w ON j.warga_id = w.id
+          LEFT JOIN jimpitan_harian jh ON w.id = jh.warga_id AND jh.tanggal = '$hari_ini'
           WHERE j.hari = '$hari' AND j.pasaran = '$pasaran' AND w.status_aktif = 1";
 $result = mysqli_query($koneksi, $query);
 ?>
@@ -52,8 +57,23 @@ $result = mysqli_query($koneksi, $query);
                                     <h6 class="mb-1 fw-bold"><?= $warga['nama']; ?></h6>
                                     <small class="text-muted">Rumah No. <?= $warga['no_rumah']; ?> | WA:
                                         <?= $warga['no_wa']; ?></small>
+                                    <?php if ($warga['status_tugas'] == 'Sudah Selesai'): ?>
+                                        <br><span class="badge bg-light text-success border border-success mt-1">💰 Kas: Rp
+                                            <?= number_format($warga['nominal_jimpitan'], 0, ',', '.'); ?></span>
+                                    <?php endif; ?>
                                 </div>
-                                <span class="badge bg-secondary rounded-pill">Siap Kirim</span>
+
+                                <div>
+                                    <?php if ($warga['status_tugas'] == 'Belum Selesai'): ?>
+                                        <a href="entry_jimpitan.php?id=<?= $warga['id']; ?>&token=<?= $kunci_rahasia; ?>"
+                                            class="btn btn-outline-primary btn-sm fw-bold me-1">
+                                            ✏️ Input Uang
+                                        </a>
+                                        <span class="badge bg-warning text-dark rounded-pill">Belum Selesai</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-success rounded-pill">✅ Selesai</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         <?php endwhile; ?>
                     </div>

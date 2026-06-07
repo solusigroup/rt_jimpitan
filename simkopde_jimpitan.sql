@@ -97,3 +97,32 @@ INSERT INTO `jadwal_master` (`id`, `warga_id`, `hari`, `pasaran`) VALUES
 (35, 29, 'Minggu', 'Legi');
 
 SET FOREIGN_KEY_CHECKS=1;
+
+DROP TABLE IF EXISTS `jimpitan_harian`;
+CREATE TABLE `jimpitan_harian` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `tanggal` DATE NOT NULL,
+  `warga_id` INT NOT NULL,
+  `status` ENUM('Belum Dikerjakan', 'Sudah Dikerjakan') DEFAULT 'Belum Dikerjakan',
+  `nominal` INT NOT NULL DEFAULT 0,
+  `waktu_update` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `idx_tanggal_warga` (`tanggal`, `warga_id`),
+  FOREIGN KEY (`warga_id`) REFERENCES `warga` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `kas_setting`;
+CREATE TABLE `kas_setting` (
+  `id` INT PRIMARY KEY,
+  `saldo_awal` INT NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+INSERT INTO `kas_setting` (`id`, `saldo_awal`) VALUES (1, 0);
+
+DROP TABLE IF EXISTS `kas_pengeluaran`;
+CREATE TABLE `kas_pengeluaran` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `tanggal` DATE NOT NULL,
+  `keterangan` VARCHAR(255) NOT NULL,
+  `nominal` INT NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
