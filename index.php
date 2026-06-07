@@ -219,10 +219,10 @@ $pasaran_jawa = $weton['pasaran'];
                                             <i class='bi bi-shield-check text-primary fs-5'></i> Perbarui Status Pengerjaan:
                                         </span>
                                         <div class='btn-group rounded-pill overflow-hidden shadow-sm' role='group' style='border: 1px solid rgba(0,0,0,0.08); background: #ffffff;'>
-                                            <button type='button' id='btn-belum-{$warga_id}' class='btn btn-sm px-4 py-2.5 fw-bold text-nowrap d-flex align-items-center gap-1.5 transition-all button-belum {$belum_active}' onclick='updateStatus({$warga_id}, \"Belum Dikerjakan\", \"{$nama}\")'>
+                                            <button type='button' id='btn-belum-{$warga_id}' class='btn btn-sm px-2 px-sm-4 py-2 fw-bold text-nowrap d-flex align-items-center gap-1 gap-sm-1.5 transition-all button-belum {$belum_active}' onclick='updateStatus({$warga_id}, \"Belum Dikerjakan\", \"{$nama}\")'>
                                                 <i class='bi bi-clock-history'></i> Belum Selesai
                                             </button>
-                                            <button type='button' id='btn-sudah-{$warga_id}' class='btn btn-sm px-4 py-2.5 fw-bold text-nowrap d-flex align-items-center gap-1.5 transition-all button-sudah {$sudah_active}' onclick='updateStatus({$warga_id}, \"Sudah Dikerjakan\", \"{$nama}\")'>
+                                            <button type='button' id='btn-sudah-{$warga_id}' class='btn btn-sm px-2 px-sm-4 py-2 fw-bold text-nowrap d-flex align-items-center gap-1 gap-sm-1.5 transition-all button-sudah {$sudah_active}' onclick='updateStatus({$warga_id}, \"Sudah Dikerjakan\", \"{$nama}\")'>
                                                 <i class='bi bi-check-circle-fill'></i> Sudah Selesai
                                             </button>
                                         </div>
