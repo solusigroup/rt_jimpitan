@@ -1,21 +1,9 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+include 'auth.php';
+check_admin();
+
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
-
-$kunci_rahasia = "rt035jimpitan2026";
-$token_request = isset($_GET['token']) ? trim($_GET['token']) : '';
-
-if ($token_request === $kunci_rahasia) {
-    $_SESSION['login'] = true;
-    $_SESSION['superuser'] = true;
-}
-if ($token_request !== $kunci_rahasia && !isset($_SESSION['login'])) {
-    header("Location: login.php");
-    exit();
-}
 
 include 'koneksi.php';
 
