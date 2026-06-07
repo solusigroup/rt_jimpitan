@@ -1,4 +1,6 @@
 <?php
+include 'auth.php';
+check_admin();
 include 'koneksi.php';
 include 'fungsi_pasaran.php';
 
@@ -24,12 +26,7 @@ $result = mysqli_query($koneksi, $query);
 </head>
 
 <body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <span class="navbar-brand">Panel Admin RT - Pengingat Jimpitan</span>
-            <a href="index.php" class="btn btn-outline-light btn-sm">Ke Dashboard Utama</a>
-        </div>
-    </nav>
+    <?php include 'menu.php'; ?>
 
     <div class="container" style="max-width: 700px;">
         <div class="card shadow-sm border-0 mb-4">

@@ -3,6 +3,9 @@
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
+include 'auth.php';
+check_admin();
+
 include 'koneksi.php';
 include 'fungsi_pasaran.php';
 

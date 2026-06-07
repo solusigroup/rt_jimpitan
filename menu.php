@@ -41,6 +41,11 @@ $is_admin = isset($_SESSION['superuser']) && $_SESSION['superuser'] === true;
                         <i class="bi bi-calendar3 me-1"></i> Atur Jadwal <?= !$is_admin ? '<i class="bi bi-lock-fill text-warning ms-1" style="font-size: 0.8rem;"></i>' : '' ?>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 rounded <?= ($current_page == 'admin_pengingat.php') ? 'active bg-warning text-dark fw-bold' : 'text-white-50' ?>" href="admin_pengingat.php">
+                        <i class="bi bi-bell-fill me-1"></i> Pengingat WA <?= !$is_admin ? '<i class="bi bi-lock-fill text-warning ms-1" style="font-size: 0.8rem;"></i>' : '' ?>
+                    </a>
+                </li>
                 <li class="nav-item ms-lg-2">
                     <?php if ($is_admin): ?>
                         <a class="btn btn-outline-danger btn-sm px-3 rounded-pill fw-bold" href="logout.php">
