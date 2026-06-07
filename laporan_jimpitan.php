@@ -3,6 +3,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 include 'koneksi.php';
+include 'fungsi_pasaran.php';
 
 // 1. Ambil Saldo Awal
 $res_setting = mysqli_query($koneksi, "SELECT saldo_awal FROM kas_setting WHERE id = 1");
@@ -71,18 +72,25 @@ $saldo_akhir = $saldo_awal + $total_pemasukan - $total_pengeluaran;
                         <table class="table table-striped table-hover mb-0 small">
                             <thead>
                                 <tr>
-                                    <th>Weton</th>
+                                    <th>Tanggal & Weton</th>
                                     <th>Petugas</th>
                                     <th class="text-end">Jumlah</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php
-                                $res_in = mysqli_query($koneksi, "SELECT j.hari, j.pasaran, w.nama, jh.nominal AS nominal_jimpitan FROM jimpitan_harian jh JOIN warga w ON jh.warga_id = w.id LEFT JOIN jadwal_master j ON j.warga_id = w.id WHERE jh.status = 'Sudah Dikerjakan' ORDER BY jh.tanggal DESC, jh.id DESC LIMIT 10");
-                                while ($row = mysqli_fetch_assoc($res_in)): ?>
+                                $res_in = mysqli_query($koneksi, "SELECT jh.tanggal, w.nama, jh.nominal AS nominal_jimpitan FROM jimpitan_harian jh JOIN warga w ON jh.warga_id = w.id WHERE jh.status = 'Sudah Dikerjakan' ORDER BY jh.tanggal DESC, jh.id DESC LIMIT 10");
+                                while ($row = mysqli_fetch_assoc($res_in)): 
+                                    $weton_data = getHariPasaran($row['tanggal']);
+                                    $weton_nama = $weton_data['hari'] . ' ' . $weton_data['pasaran'];
+                                    $tanggal_formatted = date('d/m/Y', strtotime($row['tanggal']));
+                                ?>
                                     <tr>
-                                        <td><?= $row['hari'] . ' ' . $row['pasaran']; ?></td>
-                                        <td><?= $row['nama']; ?></td>
+                                        <td>
+                                            <div class="fw-bold text-dark mb-0"><?= $tanggal_formatted; ?></div>
+                                            <small class="text-secondary" style="font-size: 0.75rem;"><?= $weton_nama; ?></small>
+                                        </td>
+                                        <td><?= htmlspecialchars($row['nama']); ?></td>
                                         <td class="text-end text-success fw-bold">Rp
                                             <?= number_format($row['nominal_jimpitan'], 0, ',', '.'); ?></td>
                                     </tr>
