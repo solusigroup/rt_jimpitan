@@ -1,10 +1,10 @@
-const CACHE_NAME = 'jimpitan-pwa-v1';
+const CACHE_NAME = 'jimpitan-pwa-v2';
 const ASSETS_TO_CACHE = [
-  'index.php',
-  'jadwal.php',
-  'laporan.php',
-  'login.php',
-  'menu.php',
+  '/',
+  '/manifest.json',
+  '/favicon.ico',
+  '/uploads/icon-192.png',
+  '/uploads/icon-512.png',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
   'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css',
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
@@ -44,26 +44,26 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// Fetch Event (Network First Strategy for dynamic content, Cache First for static files)
+// Fetch Event
 self.addEventListener('fetch', event => {
   const requestUrl = new URL(event.request.url);
 
-  // Cek jika request adalah halaman dinamis (PHP) atau aksi form/POST
-  if (requestUrl.pathname.endsWith('.php') || event.request.method === 'POST') {
+  // Bypass non-GET requests, admin panel, logins, and API routes
+  if (
+    event.request.method !== 'GET' ||
+    requestUrl.pathname.startsWith('/admin') ||
+    requestUrl.pathname.startsWith('/login') ||
+    requestUrl.pathname.startsWith('/logout') ||
+    requestUrl.pathname.startsWith('/api')
+  ) {
+    return;
+  }
+
+  // Network First strategy for navigation requests (HTML pages)
+  if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        // Fallback jika offline, cari di cache jika tersedia
-        return caches.match(event.request);
-      })
-    );
-  } else {
-    // Untuk static assets, gunakan Cache First dengan fallback ke Network
-    event.respondWith(
-      caches.match(event.request).then(cachedResponse => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-        return fetch(event.request).then(networkResponse => {
+      fetch(event.request)
+        .then(networkResponse => {
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then(cache => {
@@ -71,8 +71,29 @@ self.addEventListener('fetch', event => {
             });
           }
           return networkResponse;
-        });
-      })
+        })
+        .catch(() => {
+          return caches.match(event.request);
+        })
     );
+    return;
   }
+
+  // Cache First strategy for static assets (images, fonts, stylesheets, scripts)
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).then(networkResponse => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      });
+    })
+  );
 });
