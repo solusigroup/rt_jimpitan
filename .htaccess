@@ -1,6 +1,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Rewrite all requests to the public directory
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteRule ^(.*)$ public/$1 [L]
+    # Rewrite empty path to public/index.php
+    RewriteRule ^$ public/index.php [L]
+    
+    # Redirect all other requests to public/index.php
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^((?!public/).*)$ public/index.php?/$1 [L,QSA]
 </IfModule>
